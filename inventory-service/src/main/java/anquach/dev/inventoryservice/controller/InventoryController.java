@@ -1,8 +1,7 @@
-package anquach.dev.inventoryservice;
+package anquach.dev.inventoryservice.controller;
 
 import anquach.dev.inventoryservice.service.InventoryService;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
