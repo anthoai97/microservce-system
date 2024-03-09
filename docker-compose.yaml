@@ -1,0 +1,26 @@
+services:
+  mongo:
+    container_name: mongo
+    image: mongo:5.0.25
+    ports:
+      - 27017:27017
+    networks:
+      - micro_svc
+    volumes:
+      - ./data/mongo/:/data/db
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.3
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+    volumes:
+      - .data/mysql:/var/lib/mysql
+    networks:
+      - micro_svc
+
+networks:
+  micro_svc:
+    driver: bridge
