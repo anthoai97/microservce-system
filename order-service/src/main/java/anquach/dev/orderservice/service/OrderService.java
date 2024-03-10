@@ -3,6 +3,7 @@ package anquach.dev.orderservice.service;
 import anquach.dev.orderservice.dto.InventoryResponse;
 import anquach.dev.orderservice.dto.OrderLineItemsDto;
 import anquach.dev.orderservice.dto.OrderRequest;
+import anquach.dev.orderservice.event.OrderPlacedEvent;
 import anquach.dev.orderservice.model.Order;
 import anquach.dev.orderservice.model.OrderLineItems;
 import anquach.dev.orderservice.repository.OrderRepository;
@@ -10,6 +11,7 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -27,6 +29,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
     private final ObservationRegistry observationRegistry;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public String placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -58,6 +61,8 @@ public class OrderService {
                 boolean allProductInStock = Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::isInStock);
                 if (inventoryResponseArray.length > 0 && allProductInStock) {
                     orderRepository.save(order);
+
+                    applicationEventPublisher.publishEvent(new OrderPlacedEvent(this, order.getOrderNumber()));
                     return "Order Placed";
                 } else {
                     throw new IllegalArgumentException("Product is not in stock, pleas try again later");
