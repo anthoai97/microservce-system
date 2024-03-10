@@ -1,4 +1,4 @@
-package anquach.dev.orderservice.service;
+package anquach.dev.orderservice.repository;
 
 
 import anquach.dev.orderservice.model.Order;

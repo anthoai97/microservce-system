@@ -1,9 +1,12 @@
 package anquach.dev.inventoryservice.controller;
 
 import anquach.dev.inventoryservice.service.InventoryService;
+import anquach.dev.inventoryservice.dto.InventoryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -11,10 +14,10 @@ import org.springframework.web.bind.annotation.*;
 public class InventoryController {
     private final InventoryService inventoryService;
 
-    @GetMapping("/{sku-code}")
+    // api/inventory?skuCode=iphone-13&skuCode=iphone-14
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public boolean isInStock(@PathVariable("sku-code") String skuCode) {
+    public List<InventoryResponse> isInStock(@RequestParam List<String> skuCode) {
         return inventoryService.isInStock(skuCode);
     }
-
 }

@@ -7,6 +7,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+
 @SpringBootApplication
 public class InventoryServiceApplication {
 
@@ -20,11 +21,11 @@ public class InventoryServiceApplication {
 		return  args -> {
 			Inventory inventory = new Inventory();
 			inventory.setQuantity(10);
-			inventory.setSkuCode("Iphone-16");
+			inventory.setSkuCode("Iphone-11");
 
 			Inventory inventory2 = new Inventory();
 			inventory2.setQuantity(100);
-			inventory2.setSkuCode("Iphone-19");
+			inventory2.setSkuCode("Iphone-14");
 
 			inventoryRepository.save(inventory);
 			inventoryRepository.save(inventory2);
