@@ -42,6 +42,15 @@ services:
     networks:
       - micro_svc
 
+  ## Zipkin
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - micro_svc
+
 networks:
   micro_svc:
     driver: bridge

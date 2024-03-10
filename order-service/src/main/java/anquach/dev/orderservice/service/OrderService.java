@@ -6,6 +6,8 @@ import anquach.dev.orderservice.dto.OrderRequest;
 import anquach.dev.orderservice.model.Order;
 import anquach.dev.orderservice.model.OrderLineItems;
 import anquach.dev.orderservice.repository.OrderRepository;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,8 +26,9 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
+    private final ObservationRegistry observationRegistry;
 
-    public void placeOrder(OrderRequest orderRequest) {
+    public String placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
 
@@ -41,22 +44,30 @@ public class OrderService {
                 .map(OrderLineItems::getSkuCode).toList();
 
         // Call Inventory Service, and place the order if product is in stock
-        InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
-                .uri("http://inventory-service/api/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
-                .retrieve()
-                .bodyToMono(InventoryResponse[].class)
-                .block();
+        Observation inventoryServiceObservation = Observation.createNotStarted("inventory-service-lookup",
+                this.observationRegistry);
+        inventoryServiceObservation.lowCardinalityKeyValue("call", "inventory-service");
+        return inventoryServiceObservation.observe(() -> {
+            InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
+                    .uri("http://inventory-service/api/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+                    .retrieve()
+                    .bodyToMono(InventoryResponse[].class)
+                    .block();
 
-        if (inventoryResponseArray != null) {
-            boolean allProductInStock = Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::isInStock);
-            if (inventoryResponseArray.length > 0 && allProductInStock) {
-                orderRepository.save(order);
+            if (inventoryResponseArray != null) {
+                boolean allProductInStock = Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::isInStock);
+                if (inventoryResponseArray.length > 0 && allProductInStock) {
+                    orderRepository.save(order);
+                    return "Order Placed";
+                } else {
+                    throw new IllegalArgumentException("Product is not in stock, pleas try again later");
+                }
             } else {
-                throw new IllegalArgumentException("Product is not in stock, pleas try again later");
+                throw new IllegalArgumentException("Failed to connect Inventory Service");
             }
-        } else {
-            throw new IllegalArgumentException("Failed to connect Inventory Service");
-        }
+        });
+
+
 
     }
 
