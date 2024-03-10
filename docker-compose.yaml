@@ -7,7 +7,7 @@ services:
     networks:
       - micro_svc
     volumes:
-      - ./data/mongo/:/data/db
+      - .data/mongo:/data/db
 
   mysql:
     container_name: mysql
@@ -18,6 +18,27 @@ services:
       MYSQL_ROOT_PASSWORD: mysql
     volumes:
       - .data/mysql:/var/lib/mysql
+    networks:
+      - micro_svc
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:23.0.0
+    command: [ "start-dev", "--import-realm" ]
+    environment:
+      DB_VENDOR: MYSQL
+      DB_ADDR: mysql
+      DB_DATABASE: keycloak
+      DB_USER: root
+      DB_PASSWORD: mysql
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - .data/realms/:/opt/keycloak/data/import/
+    depends_on:
+      - mysql
     networks:
       - micro_svc
 
